@@ -1,0 +1,19 @@
+# Terraform files
+*.tfstate
+*.tfstate.backup
+.terraform/
+*.tfplan
+
+# Python cache files
+__pycache__/
+*.pyc
+
+# VSCode settings
+.vscode/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Ansible
+*.retry
