@@ -1,0 +1,67 @@
+---
+- name: Deploy application using Docker
+  hosts: all
+  become: true
+  vars:
+    app_name: "sample_app"
+    docker_image_name: "sample_app_image"
+    app_directory: "/home/{{ ansible_user }}/{{ app_name }}"
+
+  tasks:
+    - name: Update apt repository and install prerequisites
+      apt:
+        update_cache: yes
+        name: 
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+        state: present
+
+    - name: Add Docker GPG key
+      shell: curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+      args:
+        warn: false
+
+    - name: Add Docker repository
+      apt_repository:
+        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable"
+        state: present
+
+    - name: Install Docker
+      apt:
+        name: docker-ce
+        state: present
+        update_cache: yes
+
+    - name: Start and enable Docker service
+      systemd:
+        name: docker
+        enabled: yes
+        state: started
+
+    - name: Create application directory
+      file:
+        path: "{{ app_directory }}"
+        state: directory
+
+    - name: Copy application code
+      copy:
+        src: ../app/  # Adjust the path to your app folder
+        dest: "{{ app_directory }}"
+        mode: 0755
+
+    - name: Build Docker image
+      community.docker.docker_image:
+        path: "{{ app_directory }}"
+        name: "{{ docker_image_name }}"
+        tag: "latest"
+        push: no
+
+    - name: Run Docker container
+      community.docker.docker_container:
+        name: "{{ app_name }}"
+        image: "{{ docker_image_name }}:latest"
+        state: started
+        ports:
+          - "80:80"  # Map port 80 on the container to port 80 on the host
