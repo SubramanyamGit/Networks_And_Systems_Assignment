@@ -98,4 +98,4 @@ jobs:
 
       - name: Run Ansible Playbook to install Docker, build image, and deploy container
         run: |
-          ansible-playbook -i ansible/inventory.ini ansible/playbook.yml
+          ansible-playbook -i ansible/inventory.ini ansible/deploy_app.yml
