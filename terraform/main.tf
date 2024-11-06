@@ -4,20 +4,20 @@ provider "azurerm" {
 
 terraform {
   backend "azurerm" {
-    resource_group_name   = var.resource_group_name
-    storage_account_name   = var.storage_account_name
+    resource_group_name   = azurerm_resource_group.rg.name
+    storage_account_name   = azurerm_storage_account.storage.name
     container_name         = var.storage_container_name
     key                    = "terraform.tfstate"
   }
 }
 
 resource "azurerm_resource_group" "rg" {
-  name     = var.resource_group_name
+  name     = "Network-RG1"
   location = "East US"
 }
 
 resource "azurerm_storage_account" "storage" {
-  name                     = var.storage_account_name
+  name                     = "tfstatestg"
   resource_group_name      = azurerm_resource_group.rg.name
   location                 = azurerm_resource_group.rg.location
   account_tier            = "Standard"
@@ -25,7 +25,7 @@ resource "azurerm_storage_account" "storage" {
 }
 
 resource "azurerm_storage_container" "container" {
-  name                  = var.storage_container_name
+  name                  = "tfstatefiles"
   storage_account_name  = azurerm_storage_account.storage.name
 }
 

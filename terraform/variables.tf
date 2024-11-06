@@ -1,20 +1,20 @@
-variable "resource_group_name" {
-  description = "The name of the resource group"
-  type        = string
-  default     = "Network-RG1"
-}
+# variable "resource_group_name" {
+#   description = "The name of the resource group"
+#   type        = string
+#   default     = "Network-RG1"
+# }
 
-variable "storage_account_name" {
-  description = "The name of the storage account"
-  type        = string
-  default     = "tfstatestg" # Must be globally unique
-}
+# variable "storage_account_name" {
+#   description = "The name of the storage account"
+#   type        = string
+#   default     = "tfstatestg" # Must be globally unique
+# }
 
-variable "storage_container_name" {
-  description = "The name of the storage container"
-  type        = string
-  default     = "terraform-state"
-}
+# variable "storage_container_name" {
+#   description = "The name of the storage container"
+#   type        = string
+#   default     = "terraform-state"
+# }
 
 variable "admin_username" {
   description = "The admin username for the VM"
