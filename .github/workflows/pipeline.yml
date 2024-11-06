@@ -15,7 +15,7 @@ jobs:
       ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       ADMIN_USERNAME: "azureuser"
       ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
-      RESOURCE_GROUP_NAME: "Network-RG"
+      RESOURCE_GROUP_NAME: "Network-RG1"
 
     steps:
       - name: Checkout code
@@ -25,10 +25,10 @@ jobs:
         uses: hashicorp/setup-terraform@v1
         with:
           terraform_version: 1.0.0
-      # - name: Azure Login
-      #   uses: azure/login@v1
-      #   with:
-      #     creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
       # - name: Download Terraform state file
       #   uses: actions/download-artifact@v3
       #   with:
