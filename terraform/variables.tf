@@ -26,3 +26,4 @@ variable "admin_password" {
   type        = string
   default     = "P@ssw0rd12345"
 }
+
