@@ -13,7 +13,7 @@ provider "azurerm" {
 
 resource "azurerm_resource_group" "rg" {
   name     = "Network-latest-3"
-  location = "East US 2"
+  location = "eastus"
 }
 
 # resource "azurerm_storage_account" "storage" {
