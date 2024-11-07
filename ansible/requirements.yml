@@ -1,0 +1,6 @@
+- src: community.general
+  version: 3.0.2
+- src: ansible-role-name
+  scm: git
+  version: main
+  name: custom-role
