@@ -47,7 +47,7 @@
 
     - name: Copy application code
       copy:
-        src: ../app/  # Adjust the path to your app folder
+        src: "../app/"  # Adjust the path to your app folder (relative to the playbook)
         dest: "{{ app_directory }}"
         mode: 0755
 
