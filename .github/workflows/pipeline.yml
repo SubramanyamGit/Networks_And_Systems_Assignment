@@ -35,32 +35,26 @@ jobs:
         working-directory: terraform
         run: terraform init
 
-      # Check if Resource Group Exists in Azure
-      - name: Check if Resource Group Exists in Azure
-        id: rg_exists_check
-        run: |
-          if az group show --name $RESOURCE_GROUP_NAME --subscription ${{ env.ARM_SUBSCRIPTION_ID }}; then
-            echo "exists_in_azure=true" >> $GITHUB_ENV
-          else
-            echo "exists_in_azure=false" >> $GITHUB_ENV
-          fi
-
-      # Check if Resource Group Exists in Terraform State
-      - name: Check if Resource Group Exists in Terraform State
-        id: rg_state_check
+      # Import Network Security Group if it exists
+      - name: Import Network Security Group into Terraform State
+        if: |
+          az network nsg show --name Network-NSG --resource-group ${{ env.RESOURCE_GROUP_NAME }} --subscription ${{ env.ARM_SUBSCRIPTION_ID }} &>/dev/null
         working-directory: terraform
-        run: |
-          if terraform state list | grep -q "azurerm_resource_group.rg"; then
-            echo "exists_in_state=true" >> $GITHUB_ENV
-          else
-            echo "exists_in_state=false" >> $GITHUB_ENV
-          fi    
+        run: terraform import azurerm_network_security_group.nsg "/subscriptions/${{ env.ARM_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RESOURCE_GROUP_NAME }}/providers/Microsoft.Network/networkSecurityGroups/Network-NSG"
 
-      # Import Resource Group into Terraform State if Needed
-      - name: Import Resource Group into Terraform State
-        if: env.exists_in_azure == 'true' && env.exists_in_state == 'false'
+      # Import Virtual Network if it exists
+      - name: Import Virtual Network into Terraform State
+        if: |
+          az network vnet show --name Network-VNET --resource-group ${{ env.RESOURCE_GROUP_NAME }} --subscription ${{ env.ARM_SUBSCRIPTION_ID }} &>/dev/null
         working-directory: terraform
-        run: terraform import azurerm_resource_group.rg "/subscriptions/${{ env.ARM_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RESOURCE_GROUP_NAME }}"
+        run: terraform import azurerm_virtual_network.vnet "/subscriptions/${{ env.ARM_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RESOURCE_GROUP_NAME }}/providers/Microsoft.Network/virtualNetworks/Network-VNET"
+
+      # Import Public IP if it exists
+      - name: Import Public IP into Terraform State
+        if: |
+          az network public-ip show --name Network-PIP --resource-group ${{ env.RESOURCE_GROUP_NAME }} --subscription ${{ env.ARM_SUBSCRIPTION_ID }} &>/dev/null
+        working-directory: terraform
+        run: terraform import azurerm_public_ip.pip "/subscriptions/${{ env.ARM_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RESOURCE_GROUP_NAME }}/providers/Microsoft.Network/publicIPAddresses/Network-PIP"
 
       - name: Apply Terraform Configuration
         working-directory: terraform
@@ -71,30 +65,3 @@ jobs:
         run: |
           terraform output
           terraform output -json
-
-      - name: Retrieve Public IP from Azure
-        id: get_public_ip
-        run: |
-          PUBLIC_IP=$(az network public-ip show \
-            --resource-group ${{ env.RESOURCE_GROUP_NAME }} \
-            --name Network-PIP \
-            --query ipAddress -o tsv)
-          echo "public_ip=${PUBLIC_IP}" >> $GITHUB_ENV
-
-      - name: Update Ansible inventory with VM IP
-        run: |
-          echo "[all]" > ansible/inventory.ini
-          echo "${{ env.public_ip }} ansible_user=${{ env.ADMIN_USERNAME }} ansible_password=${{ env.ADMIN_PASSWORD }} ansible_connection=ssh ansible_port=22" >> ansible/inventory.ini
-
-      - name: Install Ansible
-        run: sudo apt-get update && sudo apt-get install -y ansible
-
-      - name: Install Ansible Galaxy Collections
-        run: ansible-galaxy collection install -r ansible/requirements.yml
-
-      - name: Run Ansible Playbook
-        run: ansible-playbook -i ansible/inventory.ini ansible/deploy_app.yml
-        env:
-          ADMIN_USERNAME: ${{ secrets.ADMIN_USERNAME }}
-          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
-          public_ip: ${{ env.public_ip }}
