@@ -1,7 +1,7 @@
 # variable "resource_group_name" {
 #   description = "The name of the resource group"
 #   type        = string
-#   default     = "Network-latest-6"
+#   default     = "Network-latest-1"
 # }
 
 # variable "storage_account_name" {
