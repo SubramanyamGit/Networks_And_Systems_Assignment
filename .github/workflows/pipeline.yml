@@ -72,3 +72,15 @@ jobs:
         run: |
           terraform output
           terraform output -json
+
+      # Step to check NSG existence
+- name: Check if Network Security Group exists
+  run: |
+    az network nsg show --name Network-NSG --resource-group ${{ env.RESOURCE_GROUP_NAME }} --subscription ${{ env.ARM_SUBSCRIPTION_ID }} || echo "NSG not found"
+
+# Terraform import command
+- name: Import Network Security Group into Terraform State
+  if: |
+    az network nsg show --name Network-NSG --resource-group ${{ env.RESOURCE_GROUP_NAME }} --subscription ${{ env.ARM_SUBSCRIPTION_ID }} &>/dev/null
+  run: terraform import azurerm_network_security_group.nsg "/subscriptions/${{ env.ARM_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RESOURCE_GROUP_NAME }}/providers/Microsoft.Network/networkSecurityGroups/Network-NSG"
+
