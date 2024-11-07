@@ -13,9 +13,9 @@ jobs:
       ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
       ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      RESOURCE_GROUP_NAME: "Network-latest-10"
       ADMIN_USERNAME: "azureuser"
       ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
-      RESOURCE_GROUP_NAME: "Network-latest-10"
 
     steps:
       - name: Checkout code
@@ -32,36 +32,22 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Initialize Terraform
-        working-directory: terraform
         run: terraform init
 
-      # Import Network Security Group if it exists
-      - name: Import Network Security Group into Terraform State
-        if: |
-          az network nsg show --name Network-NSG --resource-group ${{ env.RESOURCE_GROUP_NAME }} --subscription ${{ env.ARM_SUBSCRIPTION_ID }} &>/dev/null
-        working-directory: terraform
-        run: terraform import azurerm_network_security_group.nsg "/subscriptions/${{ env.ARM_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RESOURCE_GROUP_NAME }}/providers/Microsoft.Network/networkSecurityGroups/Network-NSG"
-
-      # Import Virtual Network if it exists
-      - name: Import Virtual Network into Terraform State
-        if: |
-          az network vnet show --name Network-VNET --resource-group ${{ env.RESOURCE_GROUP_NAME }} --subscription ${{ env.ARM_SUBSCRIPTION_ID }} &>/dev/null
-        working-directory: terraform
-        run: terraform import azurerm_virtual_network.vnet "/subscriptions/${{ env.ARM_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RESOURCE_GROUP_NAME }}/providers/Microsoft.Network/virtualNetworks/Network-VNET"
-
-      # Import Public IP if it exists
-      - name: Import Public IP into Terraform State
-        if: |
-          az network public-ip show --name Network-PIP --resource-group ${{ env.RESOURCE_GROUP_NAME }} --subscription ${{ env.ARM_SUBSCRIPTION_ID }} &>/dev/null
-        working-directory: terraform
-        run: terraform import azurerm_public_ip.pip "/subscriptions/${{ env.ARM_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RESOURCE_GROUP_NAME }}/providers/Microsoft.Network/publicIPAddresses/Network-PIP"
-
-      - name: Apply Terraform Configuration
-        working-directory: terraform
-        run: terraform apply -auto-approve -var="admin_username=${{ env.ADMIN_USERNAME }}" -var="admin_password=${{ env.ADMIN_PASSWORD }}"
-
-      - name: Debug Terraform outputs
-        working-directory: terraform
+      # Check if the Network Security Group (NSG) exists
+      - name: Check if NSG exists in Azure
         run: |
-          terraform output
-          terraform output -json
+          az network nsg show --name Network-NSG --resource-group ${{ secrets.RESOURCE_GROUP_NAME }} --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} || echo "NSG not found"
+
+      # Import the Network Security Group into Terraform state
+      - name: Import Network Security Group into Terraform State
+        run: |
+          terraform import azurerm_network_security_group.nsg "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ secrets.RESOURCE_GROUP_NAME }}/providers/Microsoft.Network/networkSecurityGroups/Network-NSG"
+
+      # Apply the Terraform configuration to ensure the state is up-to-date
+      - name: Apply Terraform Configuration
+        run: terraform apply -auto-approve
+
+      # Show Terraform state after the import
+      - name: Show Terraform State after Import
+        run: terraform state list
