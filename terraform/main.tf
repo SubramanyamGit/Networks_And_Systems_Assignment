@@ -2,6 +2,7 @@ provider "azurerm" {
   features {}
 }
 
+# Uncomment to enable backend if needed
 # terraform {
 #   backend "azurerm" {
 #     resource_group_name   = azurerm_resource_group.rg.name
@@ -12,10 +13,11 @@ provider "azurerm" {
 # }
 
 resource "azurerm_resource_group" "rg" {
-  name     = "Network-latest-5"
+  name     = "Network-latest-6"
   location = "UK South"
 }
 
+# Uncomment to enable storage for backend state
 # resource "azurerm_storage_account" "storage" {
 #   name                     = "tfstatestg"
 #   resource_group_name      = azurerm_resource_group.rg.name
@@ -24,6 +26,7 @@ resource "azurerm_resource_group" "rg" {
 #   account_replication_type = "LRS"
 # }
 
+# Uncomment to enable storage container for backend state
 # resource "azurerm_storage_container" "container" {
 #   name                  = "tfstatefiles"
 #   storage_account_name  = azurerm_storage_account.storage.name
@@ -98,7 +101,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
   name                = "Network-Infra-VM"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
-  size                = "Standard_B1s"
+  size                = "Standard_B1ms"  # Changed from Standard_B1s to Standard_B1ms for availability
   admin_username      = var.admin_username
   admin_password      = var.admin_password
   network_interface_ids = [
