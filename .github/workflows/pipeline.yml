@@ -66,7 +66,7 @@ jobs:
           terraform output
           terraform output -json
 
-    - name: Check if NSG exists in Azure
-  run: |
-    az network nsg show --name Network-NSG --resource-group ${{ secrets.RESOURCE_GROUP_NAME }} --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} || echo "NSG not found"
-
+      # Check if Network Security Group (NSG) exists in Azure
+      - name: Check if NSG exists in Azure
+        run: |
+          az network nsg show --name Network-NSG --resource-group ${{ env.RESOURCE_GROUP_NAME }} --subscription ${{ env.ARM_SUBSCRIPTION_ID }} || echo "NSG not found"
