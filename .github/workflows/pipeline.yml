@@ -34,20 +34,20 @@ jobs:
       - name: Initialize Terraform
         run: terraform init
 
-      # Check if the Network Security Group (NSG) exists
-      - name: Check if NSG exists in Azure
-        run: |
-          az network nsg show --name Network-NSG --resource-group ${{ secrets.RESOURCE_GROUP_NAME }} --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} || echo "NSG not found"
-
-      # Import the Network Security Group into Terraform state
+      # Specify the directory that contains the Terraform configuration files
       - name: Import Network Security Group into Terraform State
         run: |
+          cd terraform  # Change to the directory where Terraform files are located
           terraform import azurerm_network_security_group.nsg "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ secrets.RESOURCE_GROUP_NAME }}/providers/Microsoft.Network/networkSecurityGroups/Network-NSG"
 
       # Apply the Terraform configuration to ensure the state is up-to-date
       - name: Apply Terraform Configuration
-        run: terraform apply -auto-approve
+        run: |
+          cd terraform  # Ensure you are in the correct directory
+          terraform apply -auto-approve
 
       # Show Terraform state after the import
       - name: Show Terraform State after Import
-        run: terraform state list
+        run: |
+          cd terraform  # Ensure you are in the correct directory
+          terraform state list
