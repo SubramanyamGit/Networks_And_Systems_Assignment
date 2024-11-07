@@ -4,6 +4,7 @@
   scm: git
   version: main
   name: custom-role
+---
 collections:
   - name: community.general
     version: 3.0.2
