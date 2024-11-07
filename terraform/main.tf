@@ -13,8 +13,8 @@ provider "azurerm" {
 # }
 
 resource "azurerm_resource_group" "rg" {
-  name     = "Network-latest-7"
-  location = "Central US"
+  name     = "Network-latest-8"
+  location = "North Europe"
 }
 
 # Uncomment to enable storage for backend state
