@@ -70,3 +70,7 @@ jobs:
       - name: Check if NSG exists in Azure
         run: |
           az network nsg show --name Network-NSG --resource-group ${{ env.RESOURCE_GROUP_NAME }} --subscription ${{ env.ARM_SUBSCRIPTION_ID }} || echo "NSG not found"
+
+
+
+
