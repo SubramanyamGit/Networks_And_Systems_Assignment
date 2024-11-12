@@ -43,13 +43,24 @@ jobs:
           az network nsg show --name ${{ env.NSG_NAME }} --resource-group ${{ env.RESOURCE_GROUP_NAME }} --subscription ${{ env.ARM_SUBSCRIPTION_ID }} &>/dev/null || echo "NSG not found"
         continue-on-error: true
 
-      # Import Network Security Group if it exists
-      - name: Import Network Security Group into Terraform State
-        if: success() && steps.Check_if_NSG_exists_in_Azure.outputs.stdout != 'NSG not found'
+         # Import NSG if it exists
+      - name: Import NSG into Terraform
+        if: steps.check_nsg.outputs.success == 'true'
         working-directory: terraform
-        run: terraform import azurerm_network_security_group.nsg "/subscriptions/${{ env.ARM_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RESOURCE_GROUP_NAME }}/providers/Microsoft.Network/networkSecurityGroups/${{ env.NSG_NAME }}"
+        run: |
+          terraform import azurerm_network_security_group.nsg "/subscriptions/${{ env.ARM_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RESOURCE_GROUP_NAME }}/providers/Microsoft.Network/networkSecurityGroups/${{ env.NSG_NAME }}"
 
-      # Import Virtual Network if it exists
+      - name: Apply Terraform Configuration
+        working-directory: terraform
+        run: terraform apply -auto-approve
+
+      # Import Network Security Group if it exists
+      # - name: Import Network Security Group into Terraform State
+      #   if: success() && steps.Check_if_NSG_exists_in_Azure.outputs.stdout != 'NSG not found'
+      #   working-directory: terraform
+      #   run: terraform import azurerm_network_security_group.nsg "/subscriptions/${{ env.ARM_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RESOURCE_GROUP_NAME }}/providers/Microsoft.Network/networkSecurityGroups/${{ env.NSG_NAME }}"
+
+      # # Import Virtual Network if it exists
       - name: Import Virtual Network into Terraform State
         if: |
           az network vnet show --name ${{ env.VNET_NAME }} --resource-group ${{ env.RESOURCE_GROUP_NAME }} --subscription ${{ env.ARM_SUBSCRIPTION_ID }} &>/dev/null
