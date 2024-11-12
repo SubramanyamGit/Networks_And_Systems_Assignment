@@ -15,7 +15,7 @@ jobs:
       ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       ADMIN_USERNAME: "azureuser"
       ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
-      RESOURCE_GROUP_NAME: "Network-latest-12"
+      RESOURCE_GROUP_NAME: "Network-latest-11"
       NSG_NAME: "Network-NSG"
       VNET_NAME: "Network-VNET"
       PIP_NAME: "Network-PIP"

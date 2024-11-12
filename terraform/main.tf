@@ -13,7 +13,7 @@ provider "azurerm" {
 # }
 
 resource "azurerm_resource_group" "rg" {
-  name     = "Network-latest-12"
+  name     = "Network-latest-11"
   location = "North Europe"
 }
 
