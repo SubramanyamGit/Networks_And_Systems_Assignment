@@ -38,7 +38,7 @@ jobs:
         working-directory: terraform
         run: terraform init
 
-      # Step to check if NSG exists
+      # Check if NSG exists
       - name: Check if NSG exists in Azure
         id: check_nsg
         run: |
@@ -54,10 +54,20 @@ jobs:
         working-directory: terraform
         run: terraform import azurerm_network_security_group.nsg "/subscriptions/${{ env.ARM_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RESOURCE_GROUP_NAME }}/providers/Microsoft.Network/networkSecurityGroups/${{ env.NSG_NAME }}"
 
+      # Check if VNet is already managed by Terraform
+      - name: Check if VNet exists in Terraform state
+        id: check_vnet_state
+        working-directory: terraform
+        run: |
+          if terraform state list | grep -q "azurerm_virtual_network.vnet"; then
+            echo "vnet_exists_in_state=true" >> $GITHUB_ENV
+          else
+            echo "vnet_exists_in_state=false" >> $GITHUB_ENV
+          fi
+
       # Remove VNet from state if it’s already managed by Terraform
       - name: Remove existing VNet from state
-        if: |
-          terraform state list | grep -q "azurerm_virtual_network.vnet"
+        if: env.vnet_exists_in_state == 'true'
         working-directory: terraform
         run: terraform state rm azurerm_virtual_network.vnet
 
