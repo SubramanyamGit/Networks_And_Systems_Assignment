@@ -54,6 +54,19 @@ jobs:
         working-directory: terraform
         run: terraform apply -auto-approve
 
+      # Remove VNet from state if it's already managed by Terraform
+      - name: Remove existing VNet from state
+        if: |
+          terraform state list | grep -q "azurerm_virtual_network.vnet"
+        working-directory: terraform
+        run: terraform state rm azurerm_virtual_network.vnet
+
+      # Import Virtual Network into Terraform State
+      - name: Import Virtual Network
+        working-directory: terraform
+        run: terraform import azurerm_virtual_network.vnet "/subscriptions/${{ env.ARM_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RESOURCE_GROUP_NAME }}/providers/Microsoft.Network/virtualNetworks/${{ env.VNET_NAME }}"
+
+
       # Import Network Security Group if it exists
       # - name: Import Network Security Group into Terraform State
       #   if: success() && steps.Check_if_NSG_exists_in_Azure.outputs.stdout != 'NSG not found'
