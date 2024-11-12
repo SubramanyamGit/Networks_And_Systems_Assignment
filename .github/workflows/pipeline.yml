@@ -38,47 +38,31 @@ jobs:
         working-directory: terraform
         run: terraform init
 
+      # Step to check if NSG exists
       - name: Check if NSG exists in Azure
+        id: check_nsg
         run: |
-          az network nsg show --name ${{ env.NSG_NAME }} --resource-group ${{ env.RESOURCE_GROUP_NAME }} --subscription ${{ env.ARM_SUBSCRIPTION_ID }} &>/dev/null || echo "NSG not found"
-        continue-on-error: true
+          if az network nsg show --name ${{ env.NSG_NAME }} --resource-group ${{ env.RESOURCE_GROUP_NAME }} --subscription ${{ env.ARM_SUBSCRIPTION_ID }} &>/dev/null; then
+            echo "exists=true" >> $GITHUB_ENV
+          else
+            echo "exists=false" >> $GITHUB_ENV
+          fi
 
-         # Import NSG if it exists
+      # Import NSG if it exists
       - name: Import NSG into Terraform
-        if: steps.check_nsg.outputs.success == 'true'
+        if: env.exists == 'true'
         working-directory: terraform
-        run: |
-          terraform import azurerm_network_security_group.nsg "/subscriptions/${{ env.ARM_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RESOURCE_GROUP_NAME }}/providers/Microsoft.Network/networkSecurityGroups/${{ env.NSG_NAME }}"
+        run: terraform import azurerm_network_security_group.nsg "/subscriptions/${{ env.ARM_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RESOURCE_GROUP_NAME }}/providers/Microsoft.Network/networkSecurityGroups/${{ env.NSG_NAME }}"
 
-      - name: Apply Terraform Configuration
+      # Remove VNet from state if it’s already managed by Terraform
+      - name: Remove existing VNet from state
+        if: |
+          terraform state list | grep -q "azurerm_virtual_network.vnet"
         working-directory: terraform
-        run: terraform apply -auto-approve
+        run: terraform state rm azurerm_virtual_network.vnet
 
-        - name: Initialize Terraform
-  working-directory: terraform
-  run: terraform init
-
-# Remove VNet from state if it's already managed by Terraform
-- name: Remove existing VNet from state
-  if: |
-    terraform state list | grep -q "azurerm_virtual_network.vnet"
-  working-directory: terraform
-  run: terraform state rm azurerm_virtual_network.vnet
-
-# Import Virtual Network into Terraform State
-- name: Import Virtual Network
-  working-directory: terraform
-  run: terraform import azurerm_virtual_network.vnet "/subscriptions/${{ env.ARM_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RESOURCE_GROUP_NAME }}/providers/Microsoft.Network/virtualNetworks/${{ env.VNET_NAME }}"
-
-
-      # Import Network Security Group if it exists
-      # - name: Import Network Security Group into Terraform State
-      #   if: success() && steps.Check_if_NSG_exists_in_Azure.outputs.stdout != 'NSG not found'
-      #   working-directory: terraform
-      #   run: terraform import azurerm_network_security_group.nsg "/subscriptions/${{ env.ARM_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RESOURCE_GROUP_NAME }}/providers/Microsoft.Network/networkSecurityGroups/${{ env.NSG_NAME }}"
-
-      # # Import Virtual Network if it exists
-      - name: Import Virtual Network into Terraform State
+      # Import Virtual Network into Terraform State
+      - name: Import Virtual Network
         if: |
           az network vnet show --name ${{ env.VNET_NAME }} --resource-group ${{ env.RESOURCE_GROUP_NAME }} --subscription ${{ env.ARM_SUBSCRIPTION_ID }} &>/dev/null
         working-directory: terraform
@@ -100,15 +84,3 @@ jobs:
         run: |
           terraform output
           terraform output -json
-
-      # Step to check NSG existence
-      - name: Check if Network Security Group exists
-        run: |
-          az network nsg show --name Network-NSG --resource-group ${{ env.RESOURCE_GROUP_NAME }} --subscription ${{ env.ARM_SUBSCRIPTION_ID }} || echo "NSG not found"
-
-      # Terraform import command
-      - name: Import Network Security Group into Terraform State
-        if: |
-          az network nsg show --name Network-NSG --resource-group ${{ env.RESOURCE_GROUP_NAME }} --subscription ${{ env.ARM_SUBSCRIPTION_ID }} &>/dev/null
-        run: terraform import azurerm_network_security_group.nsg "/subscriptions/${{ env.ARM_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RESOURCE_GROUP_NAME }}/providers/Microsoft.Network/networkSecurityGroups/Network-NSG"
-
