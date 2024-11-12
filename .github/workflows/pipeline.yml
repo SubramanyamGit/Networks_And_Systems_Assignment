@@ -58,7 +58,7 @@ jobs:
         if: |
           az network public-ip show --name ${{ env.PIP_NAME }} --resource-group ${{ env.RESOURCE_GROUP_NAME }} --subscription ${{ env.ARM_SUBSCRIPTION_ID }} &>/dev/null
         working-directory: terraform
-        run: terraform import azurerm_public_ip.pip "/subscriptions/${{ env.ARM_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RESOURCE_GROUP_NAME }}/providers/Microsoft.Network/publicIPAddresses/${{ env.PIP_NAME }}"
+        run: terraform apply "/subscriptions/${{ env.ARM_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RESOURCE_GROUP_NAME }}/providers/Microsoft.Network/publicIPAddresses/${{ env.PIP_NAME }}"
 
       - name: Apply Terraform Configuration
         working-directory: terraform
